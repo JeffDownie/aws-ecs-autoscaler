@@ -1,0 +1,42 @@
+{
+  "name": "aws-ecs-autoscaler",
+  "version": "0.1.0",
+  "description": "",
+  "author": "Jeff Downie",
+  "main": "index.js",
+  "scripts": {
+    "version": "cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]'",
+    "docker": "npm run docker:build && npm run docker:push",
+    "docker:build": "rm -rf ./node_modules && docker build -t trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1) .",
+    "docker:push": "docker push trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1)",
+    "prepublishOnly": "npm run docker",
+    "test": "npm run lint && istanbul cover ./node_modules/.bin/_mocha",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JeffDownie/aws-ecs-autoscaler.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JeffDownie/aws-ecs-autoscaler/issues"
+  },
+  "homepage": "https://github.com/JeffDownie/aws-ecs-autoscaler",
+  "contributors": [
+    "Jeff Downie"
+  ],
+  "dependencies": {
+    "aws-sdk": "2.30.0",
+    "camda": "0.4.0",
+    "commander": "2.9.0",
+    "ramda": "0.23.0",
+    "seedrandom": "2.4.2"
+  },
+  "devDependencies": {
+    "coveralls": "2.12.0",
+    "eslint": "3.18.0",
+    "istanbul": "0.4.5",
+    "mocha": "3.2.0"
+  }
+}
