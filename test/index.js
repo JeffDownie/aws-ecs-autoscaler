@@ -5,3 +5,6 @@ describe('scaleUp', () => {
 describe('scaleDown', () => {
     require('./scaleDown');
 });
+describe('binpack', () => {
+    require('./binpack');
+});

@@ -5,3 +5,6 @@ describe('index.js', () => {
         done();
     });
 });
+describe('removeable', () => {
+    require('./removeable.js');
+});

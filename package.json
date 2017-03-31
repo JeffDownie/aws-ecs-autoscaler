@@ -10,7 +10,7 @@
     "docker:build": "rm -rf ./node_modules && docker build -t trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1) .",
     "docker:push": "docker push trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1)",
     "prepublishOnly": "npm run docker",
-    "test": "npm run lint && istanbul cover ./node_modules/.bin/_mocha",
+    "test": "npm run lint && istanbul cover ./node_modules/.bin/_mocha test/index.js",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "eslint ."
   },
@@ -37,6 +37,7 @@
     "coveralls": "2.12.0",
     "eslint": "3.18.0",
     "istanbul": "0.4.5",
-    "mocha": "3.2.0"
+    "mocha": "3.2.0",
+    "should": "11.2.1"
   }
 }

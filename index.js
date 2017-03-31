@@ -14,6 +14,7 @@ const as = new AWS.AutoScaling();
 
 let ASGroupName = null;
 let clusterName = null;
+let scaleDownStrategy = 'removeable';
 
 program
     .version('0.1.0')
@@ -68,7 +69,7 @@ gatherInfo({
             console.log('Capacity increased');
         });
     } else {
-        const scaleDownInstance = scaleDown(data);
+        const scaleDownInstance = scaleDown(data, scaleDownStrategy);
         if(scaleDownInstance) {
             removeInstance(scaleDownInstance, err => {
                 if(err) return console.error(err);
