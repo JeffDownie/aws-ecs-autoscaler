@@ -23,7 +23,11 @@ it('should remove an empty instance', () => {
                 name: 'CPU',
                 integerValue: 100
             }],
-            containerInstanceArn: 'abc'
+            containerInstanceArn: 'abc',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 1
+            }]
         }],
         taskDefinitions: [],
         tasks: []
@@ -40,7 +44,11 @@ it('should not remove a lone filled instance', () => {
                 name: 'CPU',
                 integerValue: 100
             }],
-            containerInstanceArn: 'abc'
+            containerInstanceArn: 'abc',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 1
+            }]
         }],
         taskDefinitions: [{
             taskDefinitionArn: 'def',
@@ -66,7 +74,11 @@ it('should remove an instance that can fit in another', () => {
                 name: 'CPU',
                 integerValue: 200
             }],
-            containerInstanceArn: 'abc'
+            containerInstanceArn: 'abc',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 1
+            }]
         }, {
             ec2InstanceId: 'i-123',
             remainingResources: [{
@@ -76,7 +88,11 @@ it('should remove an instance that can fit in another', () => {
                 name: 'CPU',
                 integerValue: 100
             }],
-            containerInstanceArn: 'abd'
+            containerInstanceArn: 'abd',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 1
+            }]
         }],
         taskDefinitions: [{
             taskDefinitionArn: 'def',
@@ -98,5 +114,54 @@ it('should remove an instance that can fit in another', () => {
             containerInstanceArn: 'abd',
             taskDefinitionArn: 'def'
         }]
+    }).should.be.equal('i-123');
+});
+it('should remove an instance in a bigger AZ first', () => {
+    removeable({
+        containerInstances: [{
+            ec2InstanceId: 'i-124',
+            remainingResources: [{
+                name: 'MEMORY',
+                integerValue: 100
+            }, {
+                name: 'CPU',
+                integerValue: 100
+            }],
+            containerInstanceArn: 'abc',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 1
+            }]
+        }, {
+            ec2InstanceId: 'i-123',
+            remainingResources: [{
+                name: 'MEMORY',
+                integerValue: 100
+            }, {
+                name: 'CPU',
+                integerValue: 100
+            }],
+            containerInstanceArn: 'abd',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 2
+            }]
+        }, {
+            ec2InstanceId: 'i-125',
+            remainingResources: [{
+                name: 'MEMORY',
+                integerValue: 100
+            }, {
+                name: 'CPU',
+                integerValue: 100
+            }],
+            containerInstanceArn: 'ab3',
+            attributes: [{
+                name: 'ecs.availability-zone',
+                value: 2
+            }]
+        }],
+        taskDefinitions: [],
+        tasks: []
     }).should.be.equal('i-123');
 });

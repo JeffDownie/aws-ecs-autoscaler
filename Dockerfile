@@ -5,4 +5,6 @@ WORKDIR /src
 
 RUN npm install --production
 
-ENTRYPOINT ["node", "/src/index.js"]
+RUN touch /var/log/autoscaler
+
+CMD ["node", "/src/index.js"]    

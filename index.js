@@ -1,7 +1,6 @@
 'use strict';
 /* eslint-disable no-console */
 
-const program = require('commander');
 const CB = require('camda').CB;
 const AWS = require('aws-sdk');
 
@@ -12,23 +11,15 @@ const scaleDown = require('./lib/scaleDown');
 AWS.config.region = 'eu-west-1';
 const as = new AWS.AutoScaling();
 
-let ASGroupName = null;
-let clusterName = null;
+let ASGroupName = process.env.AS_GROUP_NAME;
+let clusterName = process.env.CLUSTER_NAME;
+let dryRun = process.env.DRY_RUN;
+
 let scaleDownStrategy = 'removeable';
 
-program
-    .version('0.1.0')
-    .arguments('<cluster-name> <auto-scaling-group-name>')
-    .option('-d, --dry-run', 'do not actually run changes, just output to console')
-    .action((cName, asgName) => {
-        clusterName = cName;
-        ASGroupName = asgName;
-    })
-    .parse(process.argv);
-
 if(!ASGroupName || !clusterName) {
-    program.outputHelp();
-    return;
+    console.error('AS_GROUP_NAME or CLUSTER_NAME missing');
+    process.exit(1);
 }
 
 //increaseASGroupCapacity :: CB (AutoscalingGroupName, currentCapacity) ()
@@ -38,7 +29,7 @@ const increaseASGroupCapacity = CB.create(params => ({
     HonorCooldown: true
 }))
     .compose(CB((asgRequest, cb) => {
-        if(program.dryRun) {
+        if(dryRun) {
             console.log('Dry run - will not increase capacity');
             return cb(null, null);
         }
@@ -51,7 +42,7 @@ const removeInstance = CB.create(instanceId => ({
     InstanceId: instanceId, ShouldDecrementDesiredCapacity: true
 }))
     .compose(CB((terminateInstanceRequest, cb) => {
-        if(program.dryRun) {
+        if(dryRun) {
             console.log('Dry run - will not remove instance: ' + terminateInstanceRequest.InstanceId);
             return cb(null, null);
         }
@@ -59,24 +50,37 @@ const removeInstance = CB.create(instanceId => ({
         as.terminateInstanceInAutoScalingGroup(terminateInstanceRequest, cb);
     }));
 
-gatherInfo({
-    clusterName: clusterName,
-    ASGroupName: ASGroupName
-}, (err, data) => {
-    if(scaleUp(data)) {
-        increaseASGroupCapacity({desiredCapacity: data.desiredCapacity, ASGroupName: ASGroupName}, err => {
-            if(err) return console.error(err);
-            console.log('Capacity increased');
-        });
-    } else {
+const run = () => {
+    gatherInfo({
+        clusterName: clusterName,
+        ASGroupName: ASGroupName
+    }, (err, data) => {
+        if(data.containerInstances.length !== data.desiredCapacity) {
+            console.log('Still scaling up instances');
+            return;
+        }
+        if(scaleUp(data)) {
+            increaseASGroupCapacity({desiredCapacity: data.desiredCapacity, ASGroupName: ASGroupName}, err => {
+                if(err) return console.error(err);
+                console.log('Capacity increased');
+            });
+            return;
+        }
+        if(data.awaitingTasks.length !== 0) {
+            console.log('Still scaling up tasks');
+            return;
+        }
         const scaleDownInstance = scaleDown(data, scaleDownStrategy);
         if(scaleDownInstance) {
             removeInstance(scaleDownInstance, err => {
                 if(err) return console.error(err);
                 console.log('Capacity decreased');
             });
-        } else {
-            console.log('No changes needed.');
+            return;
         }
-    }
-});
+        console.log('No changes needed.');
+    });
+};
+
+run();
+setInterval(run, 20000);
