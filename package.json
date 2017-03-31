@@ -1,6 +1,6 @@
 {
   "name": "aws-ecs-autoscaler",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "author": "Jeff Downie",
   "main": "index.js",
