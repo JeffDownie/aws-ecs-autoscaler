@@ -2,6 +2,33 @@
 require('should');
 
 const scaleDown = require('../lib/scaleDown');
+const now = new Date().getTime();
+const shouldDie = now - (55 * 60 * 1000) - 1;
+const shouldLive = now - 1;
+
+const instance = (ec2Id, mem, cpu, arn, az) => ({
+    ec2InstanceId: ec2Id,
+    remainingResources: [{
+        name: 'MEMORY',
+        integerValue: mem
+    }, {
+        name: 'CPU',
+        integerValue: cpu
+    }],
+    containerInstanceArn: arn,
+    attributes: [{
+        name: 'ecs.availability-zone',
+        value: az
+    }]
+});
+const ec2 = (id, launchTime) => ({
+    InstanceId: id,
+    LaunchTime: launchTime
+});
+const task = (containerInstanceArn, taskDefArn) => ({
+    containerInstanceArn: containerInstanceArn,
+    taskDefinitionArn: taskDefArn
+});
 
 describe('scaleDown', () => {
     it('exists', () => {
@@ -10,47 +37,30 @@ describe('scaleDown', () => {
     it('should not do anything if nothing is there', () => {
         scaleDown({
             containerInstances: [],
-            taskDefinitions: []
+            taskDefinitions: [],
+            ec2Instances: []
         }).should.be.false();
     });
     it('should remove an empty instance', () => {
         scaleDown({
-            containerInstances: [{
-                ec2InstanceId: 'i-123',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 100
-                }, {
-                    name: 'CPU',
-                    integerValue: 100
-                }],
-                containerInstanceArn: 'abc',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 1
-                }]
-            }],
+            containerInstances: [instance('i-123', 100, 100, 'abc', 1)],
+            ec2Instances: [ec2('i-123', shouldDie)],
             taskDefinitions: [],
             tasks: []
         }).should.be.equal('i-123');
     });
+    it('should not remove an instance that is not old enough', () => {
+        scaleDown({
+            containerInstances: [instance('i-123', 100, 100, 'abc', 1)],
+            ec2Instances: [ec2('i-123', shouldLive)],
+            taskDefinitions: [],
+            tasks: []
+        }).should.be.false();
+    });
     it('should not remove a lone filled instance', () => {
         scaleDown({
-            containerInstances: [{
-                ec2InstanceId: 'i-123',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 100
-                }, {
-                    name: 'CPU',
-                    integerValue: 100
-                }],
-                containerInstanceArn: 'abc',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 1
-                }]
-            }],
+            containerInstances: [instance('i-123', 100, 100, 'abc', 1)],
+            ec2Instances: [ec2('i-123', shouldDie)],
             taskDefinitions: [{
                 taskDefinitionArn: 'def',
                 containerDefinitions: [{
@@ -58,43 +68,19 @@ describe('scaleDown', () => {
                     cpu: 100
                 }]
             }],
-            tasks: [{
-                containerInstanceArn: 'abc',
-                taskDefinitionArn: 'def'
-            }]
+            tasks: [task('abc', 'def')]
         }).should.be.false();
     });
     it('should remove an instance that can fit in another', () => {
         scaleDown({
-            containerInstances: [{
-                ec2InstanceId: 'i-124',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 200
-                }, {
-                    name: 'CPU',
-                    integerValue: 200
-                }],
-                containerInstanceArn: 'abc',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 1
-                }]
-            }, {
-                ec2InstanceId: 'i-123',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 100
-                }, {
-                    name: 'CPU',
-                    integerValue: 100
-                }],
-                containerInstanceArn: 'abd',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 1
-                }]
-            }],
+            containerInstances: [
+                instance('i-124', 200, 200, 'abc', 1),
+                instance('i-123', 100, 100, 'abd', 1)
+            ],
+            ec2Instances: [
+                ec2('i-123', shouldDie),
+                ec2('i-124', shouldDie)
+            ],
             taskDefinitions: [{
                 taskDefinitionArn: 'def',
                 containerDefinitions: [{
@@ -102,66 +88,26 @@ describe('scaleDown', () => {
                     cpu: 100
                 }]
             }],
-            tasks: [{
-                containerInstanceArn: 'abc',
-                taskDefinitionArn: 'def'
-            }, {
-                containerInstanceArn: 'abc',
-                taskDefinitionArn: 'def'
-            }, {
-                containerInstanceArn: 'abd',
-                taskDefinitionArn: 'def'
-            }, {
-                containerInstanceArn: 'abd',
-                taskDefinitionArn: 'def'
-            }]
+            tasks: [
+                task('abc', 'def'),
+                task('abc', 'def'),
+                task('abd', 'def'),
+                task('abd', 'def')
+            ]
         }).should.be.equal('i-123');
     });
     it('should remove an instance in a bigger AZ first', () => {
         scaleDown({
-            containerInstances: [{
-                ec2InstanceId: 'i-124',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 100
-                }, {
-                    name: 'CPU',
-                    integerValue: 100
-                }],
-                containerInstanceArn: 'abc',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 1
-                }]
-            }, {
-                ec2InstanceId: 'i-123',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 100
-                }, {
-                    name: 'CPU',
-                    integerValue: 100
-                }],
-                containerInstanceArn: 'abd',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 2
-                }]
-            }, {
-                ec2InstanceId: 'i-125',
-                remainingResources: [{
-                    name: 'MEMORY',
-                    integerValue: 100
-                }, {
-                    name: 'CPU',
-                    integerValue: 100
-                }],
-                containerInstanceArn: 'ab3',
-                attributes: [{
-                    name: 'ecs.availability-zone',
-                    value: 2
-                }]
-            }],
+            containerInstances: [
+                instance('i-124', 100, 100, 'abc', 1),
+                instance('i-123', 100, 100, 'abd', 2),
+                instance('i-125', 100, 100, 'abe', 2)
+            ],
+            ec2Instances: [
+                ec2('i-123', shouldDie),
+                ec2('i-124', shouldDie),
+                ec2('i-125', shouldDie)
+            ],
             taskDefinitions: [],
             tasks: []
         }).should.be.equal('i-123');
