@@ -4,7 +4,7 @@
 const CB = require('camda').CB;
 const AWS = require('aws-sdk');
 
-const gatherInfo = require('./lib/gatherInformation.js');
+const gatherInfo = require('./lib/gatherInformation');
 const scaleUp = require('./lib/scaleUp');
 const scaleDown = require('./lib/scaleDown');
 
@@ -14,8 +14,6 @@ const as = new AWS.AutoScaling();
 let ASGroupName = process.env.AS_GROUP_NAME;
 let clusterName = process.env.CLUSTER_NAME;
 let dryRun = process.env.DRY_RUN;
-
-let scaleDownStrategy = 'removeable';
 
 if(!ASGroupName || !clusterName) {
     console.error('AS_GROUP_NAME or CLUSTER_NAME missing');
@@ -70,7 +68,7 @@ const run = () => {
             console.log('Still scaling up tasks');
             return;
         }
-        const scaleDownInstance = scaleDown(data, scaleDownStrategy);
+        const scaleDownInstance = scaleDown(data);
         if(scaleDownInstance) {
             removeInstance(scaleDownInstance, err => {
                 if(err) return console.error(err);

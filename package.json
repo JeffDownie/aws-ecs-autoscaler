@@ -7,7 +7,7 @@
   "scripts": {
     "version": "cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]'",
     "docker": "npm run docker:build && npm run docker:push",
-    "docker:build": "rm -rf ./node_modules && docker build -t trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1) .",
+    "docker:build": "docker build -t trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1) .",
     "docker:push": "docker push trinitymirror/aws-ecs-autoscaler:$(npm run version | tail -1)",
     "prepublishOnly": "npm run docker",
     "test": "npm run lint && istanbul cover ./node_modules/.bin/_mocha test/index.js",
