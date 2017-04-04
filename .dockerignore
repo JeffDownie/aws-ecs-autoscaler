@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+**.swp
+**/npm-debug.log
+.git*
+.eslint*
+LICENSE
+README.md
+.travis.yml
