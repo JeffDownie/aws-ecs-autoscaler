@@ -58,7 +58,7 @@ const run = () => {
             return;
         }
         if(scaleUp(data)) {
-            increaseASGroupCapacity({desiredCapacity: data.desiredCapacity, ASGroupName: ASGroupName}, err => {
+            increaseASGroupCapacity({currentCapacity: data.desiredCapacity, ASGroupName: ASGroupName}, err => {
                 if(err) return console.error(err);
                 console.log('Capacity increased');
             });
