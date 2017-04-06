@@ -48,35 +48,38 @@ const removeInstance = CB.create(instanceId => ({
         as.terminateInstanceInAutoScalingGroup(terminateInstanceRequest, cb);
     }));
 
+const gc = () => {
+    if(global.gc) global.gc();
+};
+
 const run = () => {
     gatherInfo({
         clusterName: clusterName,
         ASGroupName: ASGroupName
     }, (err, data) => {
+        const scaleDownInstance = scaleDown(data);
+        const scaleUpInstance = scaleUp(data);
+
         if(data.containerInstances.length !== data.desiredCapacity) {
             console.log('Still scaling up instances');
-            return;
-        }
-        if(scaleUp(data)) {
-            increaseASGroupCapacity({currentCapacity: data.desiredCapacity, ASGroupName: ASGroupName}, err => {
+        } else if(scaleUpInstance) {
+            return increaseASGroupCapacity({currentCapacity: data.desiredCapacity, ASGroupName: ASGroupName}, err => {
                 if(err) return console.error(err);
                 console.log('Capacity increased');
+                gc();
             });
-            return;
-        }
-        if(data.awaitingTasks.length !== 0) {
+        } else if(data.awaitingTasks.length !== 0) {
             console.log('Still scaling up tasks');
-            return;
-        }
-        const scaleDownInstance = scaleDown(data);
-        if(scaleDownInstance) {
-            removeInstance(scaleDownInstance, err => {
+        } else if(scaleDownInstance) {
+            return removeInstance(scaleDownInstance, err => {
                 if(err) return console.error(err);
                 console.log('Capacity decreased');
+                gc();
             });
-            return;
+        } else {
+            console.log('No changes needed.');
         }
-        console.log('No changes needed.');
+        gc();
     });
 };
 
