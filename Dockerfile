@@ -5,4 +5,4 @@ WORKDIR /src
 
 RUN npm install --silent --production
 
-CMD ["node", "/src/index.js"]    
+CMD ["node", "--expose-gc" , "/src/index.js"]
