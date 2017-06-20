@@ -27,16 +27,15 @@
     "Jeff Downie"
   ],
   "dependencies": {
-    "aws-sdk": "2.35.0",
-    "camda": "0.4.2",
-    "ramda": "0.23.0",
-    "seedrandom": "2.4.2"
+    "aws-sdk": "2.73.0",
+    "camda": "0.4.4",
+    "ramda": "0.24.1"
   },
   "devDependencies": {
-    "coveralls": "2.13.0",
-    "eslint": "3.18.0",
+    "coveralls": "2.13.1",
+    "eslint": "4.0.0",
     "istanbul": "0.4.5",
-    "mocha": "3.2.0",
+    "mocha": "3.4.2",
     "should": "11.2.1"
   }
 }
