@@ -8,3 +8,6 @@ describe('scaleDown', () => {
 describe('binpack', () => {
     require('./binpack');
 });
+describe('dataUtils', () => {
+    require('./dataUtils');
+});
