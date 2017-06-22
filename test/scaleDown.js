@@ -96,6 +96,29 @@ describe('scaleDown', () => {
             ]
         }).should.be.equal('i-123');
     });
+    it('should not remove an instance with container definitions that can\'t be found', () => {
+        scaleDown({
+            containerInstances: [
+                instance('i-124', 100, 100, 'abc', '1'),
+                instance('i-123', 0, 0, 'abd', '1')
+            ],
+            ec2Instances: [
+                ec2('i-123', shouldDie),
+                ec2('i-124', shouldDie)
+            ],
+            taskDefinitions: [{
+                taskDefinitionArn: 'def',
+                containerDefinitions: [{
+                    memory: 100,
+                    cpu: 100
+                }]
+            }],
+            tasks: [
+                task('abc', 'def'),
+                task('abd', 'hij')
+            ]
+        }).should.be.false();
+    });
     it('should remove an aging instance and put containers in a newer instance', () => {
         scaleDown({
             containerInstances: [
