@@ -23,6 +23,8 @@ In a cloudformation template, on the ECS cluster:
           Value: MY_AUSTOSCALING_GROUP_NAME
         - Name: CLUSTER_NAME
           Value: MY_CLUSTER_NAME
+        - Name: AWS_REGION
+          Value: !Ref "AWS::Region"
         Essential: true
         Image: !Sub trinitymirror/aws-ecs-autoscaler:${AutoscalingVersion}
         Memory: 200
@@ -58,5 +60,6 @@ And it would require the following permissions attached to the Austoscaling grou
 
 Note that the autoscaling actions do require access to all resources, and cannot be limited to just your autoscaling group - this is a limitation of [AWS autoscaling groups](http://docs.aws.amazon.com/autoscaling/latest/userguide/IAM.html#AutoScaling_ARN_Format)
 
-## Optional environment variables:
-`DRY_RUN=true` - Causes the container to not actually run any changes, just print to stdout what it would do.
+## Optional environment variables and their defaults:
+`DRY_RUN=false` - When true, causes the container to not actually run any changes, just print to stdout what it would do. Default is false.
+`INTERVAL=20000` - The interval that the container checks for changes to the cluster, in milliseconds. Default is 20000.

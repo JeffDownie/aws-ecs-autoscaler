@@ -8,12 +8,16 @@ const gatherInfo = require('./lib/gatherInformation');
 const scaleUp = require('./lib/scaleUp');
 const scaleDown = require('./lib/scaleDown');
 
-AWS.config.region = 'eu-west-1';
+if(!process.env.AWS_REGION) {
+    console.error('AWS_REGION not set');
+    process.exit(1);
+}
 const as = new AWS.AutoScaling();
 
 let ASGroupName = process.env.AS_GROUP_NAME;
 let clusterName = process.env.CLUSTER_NAME;
 let dryRun = process.env.DRY_RUN;
+let interval = process.env.INTERVAL || 20000;
 
 if(!ASGroupName || !clusterName) {
     console.error('AS_GROUP_NAME or CLUSTER_NAME missing');
@@ -84,4 +88,4 @@ const run = () => {
 };
 
 run();
-setInterval(run, 20000);
+setInterval(run, interval);
