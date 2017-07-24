@@ -18,6 +18,7 @@ let ASGroupName = process.env.AS_GROUP_NAME;
 let clusterName = process.env.CLUSTER_NAME;
 let dryRun = process.env.DRY_RUN;
 let interval = process.env.INTERVAL || 20000;
+let loopsRemaining = process.env.MAX_LOOPS || 20;
 
 if(!ASGroupName || !clusterName) {
     console.error('AS_GROUP_NAME or CLUSTER_NAME missing');
@@ -57,6 +58,12 @@ const gc = () => {
 };
 
 const run = () => {
+    if(loopsRemaining <= 0) {
+        process.exit(0);
+        return;
+    };
+    loopsRemaining--;
+
     gatherInfo({
         clusterName: clusterName,
         ASGroupName: ASGroupName
