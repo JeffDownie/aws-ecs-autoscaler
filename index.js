@@ -61,7 +61,7 @@ const run = () => {
     if(loopsRemaining <= 0) {
         process.exit(0);
         return;
-    };
+    }
     loopsRemaining--;
 
     gatherInfo({
