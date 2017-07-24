@@ -63,3 +63,4 @@ Note that the autoscaling actions do require access to all resources, and cannot
 ## Optional environment variables and their defaults:
 `DRY_RUN=false` - When true, causes the container to not actually run any changes, just print to stdout what it would do. Default is false.
 `INTERVAL=20000` - The interval that the container checks for changes to the cluster, in milliseconds. Default is 20000.
+`MAX_LOOPS=20` - Maximum number of intervals to run before exiting, to avoid a memory leak in the AWS SDK. Default is 20.
